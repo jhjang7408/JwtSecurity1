@@ -80,8 +80,13 @@ public class IndexController {
     }
 
 
+    // OAuth 로그인 해도 PrincipalDetails
+    // 일반 로그인 해도 PrincipalDetails
     @GetMapping("/user")
     public @ResponseBody String user(@AuthenticationPrincipal PrincipalDetails principalDetails){
+
+        System.out.println("principalDetails : " + principalDetails.getUser());
+
         return "user";
     }
 
