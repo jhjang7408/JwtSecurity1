@@ -1,6 +1,9 @@
 package com.temisone.jwtsecurity.config.oauth;
 
 import com.temisone.jwtsecurity.config.auth.PrincipalDetails;
+import com.temisone.jwtsecurity.config.oauth.provider.FacebookUserInfo;
+import com.temisone.jwtsecurity.config.oauth.provider.GoogleUserInfo;
+import com.temisone.jwtsecurity.config.oauth.provider.OAuth2UserInfo;
 import com.temisone.jwtsecurity.model.User;
 import com.temisone.jwtsecurity.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +40,43 @@ public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
         // userRequest 정보 -> loadUser 함수 호출 -> 구글로부터 회원프로필 받아줌
         System.out.println("getAttributes : " + oauth2User.getAttributes());
 
-        String provider = userRequest.getClientRegistration().getClientId(); // google
-        String providerId = oauth2User.getAttribute("sub");
+
+        // 회원가입을 강제로 진행해볼 예정
+        OAuth2UserInfo oAuth2UserInfo = null;
+        if (userRequest.getClientRegistration().getRegistrationId().equals("google")){
+            System.out.println("구글 로그인 요청");
+            oAuth2UserInfo = new GoogleUserInfo(oauth2User.getAttributes());
+
+        } else if (userRequest.getClientRegistration().getRegistrationId().equals("facebook")){
+            System.out.println("페이스북 로그인 요청");
+            oAuth2UserInfo = new FacebookUserInfo(oauth2User.getAttributes());
+
+        } else {
+            System.out.println("우리는 구글과 페이스북만 지원해요 ㅎㅎㅎㅎ");
+        }
+
+
+        /*String provider = userRequest.getClientRegistration().getRegistrationId(); // google
+        System.out.println("provider : " + provider);
+        String providerId = oauth2User.getAttribute("sub"); // 구글에서는 sub가 pk지만 페이스북에서는 id라고 써야됨
         String username = provider + "_" + providerId; // google_sub  << sub는 그 구글의 프라이머리키 같은거임
         String password = bCryptPasswordEncoder.encode("겟인데어");
         String email = oauth2User.getAttribute("email");
+        String role = "ROLE_USER";*/
+
+        String provider = oAuth2UserInfo.getProvider();
+        String providerId = oAuth2UserInfo.getProviderId();
+        String username = provider + "_" + providerId; // google_sub  << sub는 그 구글의 프라이머리키 같은거임
+        String password = bCryptPasswordEncoder.encode("겟인데어");
+        String email = oAuth2UserInfo.getEmail();
         String role = "ROLE_USER";
+
+
+
+
+
+
+
 
         User userEntity = userRepository.findByUsername(username);
 
@@ -61,7 +95,7 @@ public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
 
             userRepository.save(userEntity);
         } else {
-            System.out.println("구글 로그인을 이미 한적이 있습니다. 당신은 자동회원가입이 되어 있습니다.");
+            System.out.println("로그인을 이미 한적이 있습니다. 당신은 자동회원가입이 되어 있습니다.");
         }
 
         return new PrincipalDetails(userEntity, oauth2User.getAttributes());
