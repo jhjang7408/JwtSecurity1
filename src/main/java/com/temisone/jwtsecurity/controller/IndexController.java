@@ -45,6 +45,7 @@ public class IndexController {
 
 
 
+
     @GetMapping("/test/oauth/login")
     public @ResponseBody String testOAuthLogin(Authentication authentication,
                                                @AuthenticationPrincipal OAuth2User oauth) {  // DI (의존성 주입)
